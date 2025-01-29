@@ -109,7 +109,7 @@ def menu():
             name = input("Enter the name of the contact to update: ")
             new_phone = input("Enter new phone (or press Enter to skip): ")
             new_email = input("Enter new email (or press Enter to skip): ")
-            att_contact(name, new_phone if new_phone else None, new_email if new_email else None)
+            update_contact(name, new_phone if new_phone else None, new_email if new_email else None)
         elif choice == '3':
             name = input("Enter the name of the contact to remove: ")
             remove_contact(name)
