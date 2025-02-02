@@ -1,4 +1,7 @@
 from datetime import datetime
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 contacts = []
 
@@ -199,6 +202,80 @@ def list_activities(contact_name):
         for activity in sorted_activities:
             print(f'Activity: {activity["activity_type"]} with {activity["contact_name"]} at {activity["date_time"]}, Description: {activity["description"]}')
 
+email_campaigns = []
+
+def send_email_campaign(subject, content, recipients):
+    # Solicitar o email e senha do usuario'
+    sender_email = input("Enter your email: ")
+    sender_password = input("Enter your password (use an app password if you have 2FA enabled): ")
+
+    # Configuracao do servidor SMTP (exemplo para o Gmail)
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            
+            message = MIMEMultipart()
+            message["From"] = sender_email
+            message["Subject"] = subject
+            message.attach(MIMEText(content, "plain"))
+
+            for recipient in recipients:
+                message["To"] = recipient
+                server.sendmail(sender_email, recipient, message.as_string())
+            print(f'Email campaign sent successfully to {recipient}')
+    
+    except Exception as e:
+        print(f'Error sending email: {e}')
+
+def create_email_campaign(subject, content, recipients):
+    campaign = {
+        'subject': subject,
+        'content': content,
+        'recipients': recipients,
+        'status': 'draft', # draft, sending, sent
+        'emails_sent': 0,
+        'emails_opened': 0,
+        'emails_clicked': 0
+    }
+    email_campaigns.append(campaign)
+    print(f'Email campaign created: {subject}')
+
+def track_email_open(campaign_index, recipient_email):
+    if campaign_index < 0 or campaign_index >= len(email_campaigns):
+        print('Invalid campaign index')
+        return
+    
+    campaign = email_campaigns[campaign_index]
+    if recipient_email not in campaign['recipients']:
+        print(f'Recipient {recipient_email} not found in campaign')
+        return
+    
+    campaign['emails_opened'] += 1j
+    print(f'Email opened by {recipient_email}. Total opens: {campaign["emails_opened"]}')
+
+def track_email_click(campaign_index, recipient_email):
+    if campaign_index < 0 or campaign_index >= len(email_campaigns):
+        print('Invalid campaign index')
+        return
+    
+    campaign = email_campaigns[campaign_index]
+    if recipient_email not in campaign['recipients']:
+        print(f'Recipient {recipient_email} not found in campaign')
+        return
+    
+    campaign['emails_clicked'] += 1
+    print(f'Email clicked by {recipient_email}. Total clicks: {campaign["emails_clicked"]}')
+
+def list_email_campaigns():
+    if not email_campaigns:
+        print('No email campaigns found')
+    else:
+        for index, campaign in enumerate(email_campaigns):
+            print(f'Index: {index}, Subject: {campaign["subject"]}, Status: {campaign["status"]}, Recipients: {len(campaign["recipients"])} \nEmails sent: {campaign["emails_sent"]}, Emails opened: {campaign["emails_opened"]}, Emails clicked: {campaign["emails_clicked"]}')
 
 def contacts_menu():
     while True:
@@ -325,6 +402,47 @@ def activities_menu():
         else:
             print("Invalid choice. Please try again.")
 
+def email_campaigns_menu():
+    while True:
+        print("\n--- Email Campaigns Menu ---")
+        print("1. Create Email Campaign")
+        print("2. Send Email Campaign")
+        print("3. Track Email Open")
+        print("4. Track Email Click")
+        print("5. List Email Campaigns")
+        print("6. Back to Main Menu")
+
+        choice = input("Choose an option (1-6): ")
+
+        if choice == '1':
+            subject = input("Enter the email subject: ")
+            content = input("Enter the email content: ")
+            recipients = input("Enter the recipients emails separated by commas: ").split(',')
+            recipients = [email.strip() for email in recipients]
+            create_email_campaign(subject, content, recipients)
+        elif choice == '2':
+            list_email_campaigns()
+            campaign_index = int(input("Enter the index of the campaign to send: "))
+            campaign = email_campaigns[campaign_index]
+            send_email_campaign(campaign['subject'], campaign['content'], campaign['recipients'])
+        elif choice == '3':
+            list_email_campaigns()
+            campaign_index = int(input("Enter the index of the campaign to track: "))
+            recipient_email = input("Enter the recipient email to track: ")
+            track_email_open(campaign_index, recipient_email)
+        elif choice == '4':
+            list_email_campaigns()
+            campaign_index = int(input("Enter the index of the campaign to track: "))
+            recipient_email = input("Enter the recipient email to track: ")
+            track_email_click(campaign_index, recipient_email)
+        elif choice == '5':
+            list_email_campaigns()
+        elif choice == '6':
+            print("Returning to Main Menu")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
 def menu():
     while True:
         print("\n--- Main Menu ---")
@@ -332,9 +450,10 @@ def menu():
         print("2. Appointments")
         print("3. Deals")
         print("4. Activities")
-        print("5. Exit")
+        print("5. Email Campaigns")
+        print("6. Exit")
 
-        choice = input("Choose an option (1-5): ")
+        choice = input("Choose an option (1-6): ")
 
         if choice == '1':
             contacts_menu()
@@ -345,6 +464,8 @@ def menu():
         elif choice == '4':
             activities_menu()
         elif choice == '5':
+            email_campaigns_menu()
+        elif choice == '6':
             print("Exiting program")
             break
         else:
