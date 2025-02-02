@@ -139,6 +139,67 @@ def list_deals():
             for deal in deals:
                 print(f"Name: {deal['name']}, Value: {deal['value']}")
 
+activities = []
+
+def contact_exists(contact_name):
+    return any(contact['name'] == contact_name for contact in contacts)
+
+def add_activity(contact_name, activity_type, date_time, description = ""):
+    if not contact_exists(contact_name):
+        print(f"Contact not found: {contact_name}")
+        return
+
+    try:
+        date_time_formatted = datetime.strptime(date_time, "%Y-%m-%d %H:%M")
+    except ValueError:
+        print('Invalid date and time format. Use YYYY-MM-DD HH:MM')
+        return
+
+    activity = {
+        'contact_name': contact_name,
+        'activity_type': activity_type,
+        'date_time': date_time_formatted,
+        'description': description
+    }
+    activities.append(activity)
+    print(f'Activity added: {activity_type} with {contact_name} at {date_time}')
+
+def update_activity(contact_name, activity_type, new_date_time = None, new_description = None):
+    for activity in activities:
+        if activity['contact_name'] == contact_name and activity['activity_type'] == activity_type:
+            if new_date_time:
+                try:
+                    date_time_formatted = datetime.strptime(new_date_time, "%Y-%m-%d %H:%M")
+                except ValueError:
+                    print('Invalid date and time format. Use YYYY-MM-DD HH:MM')
+                    return
+                activity['date_time'] = date_time_formatted
+            if new_description:
+                activity['description'] = new_description
+            print(f'Activity updated: {activity_type} with {contact_name}')
+            return True
+    print(f'Activity not found: {activity_type} with {contact_name}')
+    return False
+
+def remove_activity(contact_name, activity_type):
+    for activity in activities:
+        if activity['contact_name'] == contact_name and activity['activity_type'] == activity_type:
+            activities.remove(activity)
+            print(f'Activity removed: {activity_type} with {contact_name}')
+            return True
+    print(f'Activity not found: {activity_type} with {contact_name}')
+    return False
+
+def list_activities(contact_name):
+    contact_activities = [activity for activity in activities if activity['contact_name'] == contact_name]
+    if not contact_activities:
+        print(f'No activities found for {contact_name}')
+    else:
+        sorted_activities = sorted(contact_activities, key=lambda k: k['date_time'])
+        for activity in sorted_activities:
+            print(f'Activity: {activity["activity_type"]} with {activity["contact_name"]} at {activity["date_time"]}, Description: {activity["description"]}')
+
+
 def contacts_menu():
     while True:
         print("\n--- Contacts Menu ---")
@@ -228,15 +289,52 @@ def deals_menu():
         else:
             print("Invalid choice. Please try again.")
 
+def activities_menu():
+    while True:
+        print("\n--- Activities Menu ---")
+        print("1. Add Activity")
+        print("2. Update Activity")
+        print("3. Remove Activity")
+        print("4. List Activities")
+        print("5. Back to Main Menu")
+        
+        choice = input("Choose an option (1-5): ")
+
+        if choice == '1':
+            contact_name = input("Enter the name of the contact: ")
+            activity_type = input("Enter the type of activity: ")
+            date_time = input("Enter date and time (YYYY-MM-DD HH:MM): ")
+            description = input("Enter description (optional): ")
+            add_activity(contact_name, activity_type, date_time, description)
+        elif choice == '2':
+            contact_name = input("Enter the name of the contact: ")
+            activity_type = input("Enter the type of activity: ")
+            new_date_time = input("Enter new date and time (YYYY-MM-DD HH:MM) or press Enter to skip: ")
+            new_description = input("Enter new description or press Enter to skip: ")
+            update_activity(contact_name, activity_type, new_date_time if new_date_time else None, new_description if new_description else None)
+        elif choice == '3':
+            contact_name = input("Enter the name of the contact: ")
+            activity_type = input("Enter the type of activity: ")
+            remove_activity(contact_name, activity_type)
+        elif choice == '4':
+            contact_name = input("Enter the name of the contact: ")
+            list_activities(contact_name)
+        elif choice == '5':
+            print("Returning to Main Menu")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
 def menu():
     while True:
         print("\n--- Main Menu ---")
         print("1. Contacts")
         print("2. Appointments")
         print("3. Deals")
-        print("4. Exit")
+        print("4. Activities")
+        print("5. Exit")
 
-        choice = input("Choose an option (1-4): ")
+        choice = input("Choose an option (1-5): ")
 
         if choice == '1':
             contacts_menu()
@@ -245,6 +343,8 @@ def menu():
         elif choice == '3':
             deals_menu()
         elif choice == '4':
+            activities_menu()
+        elif choice == '5':
             print("Exiting program")
             break
         else:
