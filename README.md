@@ -13,4 +13,5 @@ campaigns;
 7. **Customizable Dashboards**: Offering customizable dashboards for different user roles; 
 8. **Reporting and Analytics**: Providing sales reports and customer analytics
 
-No external libraries are required to run this project.
+You need to install the 'matplotlib' library, as it is not included by default. To install it, run the following command:
+    pip install matplotlib
