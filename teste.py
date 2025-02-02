@@ -2,6 +2,7 @@ from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import matplotlib.pyplot as plt
 
 contacts = []
 
@@ -411,6 +412,58 @@ def admin_dashboard(username):
     print('All Email campaigns:')
     list_email_campaigns()	
 
+def generate_sales_report():
+    print('\n--- Sales Report ---')
+    print(f"Total Leads: {len(leads)}")
+    print(f"Total Deals: {len(deals)}")
+    print(f"Total Revenue: ${sum(deal['value'] for deal in deals)}")
+
+    print("\nConversion by Stage:")
+    for stage, deals_in_stage in sales_pipeline.items():
+        print(f"{stage}: {len(deals_in_stage)} deals")
+
+def generate_activity_report():
+    print('\n--- Activity Report ---')
+    activity_counts = {}
+    for lead in leads:
+        for interaction in lead['interactions']:
+            activity_type = interaction['type']
+            if activity_type in activity_counts:
+                activity_counts[activity_type] += 1
+            else:
+                activity_counts[activity_type] = 1
+
+    print("Interactions by Type:")
+    for activity_type, count in activity_counts.items():
+        print(f"{activity_type}: {count} interactions")
+
+def plot_sales_metrics():
+    stages = list(sales_pipeline.keys())
+    deal_counts = [len(deals_in_stage) for deals_in_stage in sales_pipeline.values()]
+
+    plt.bar(stages, deal_counts, color='skyblue')
+    plt.title('Deals by Stage')
+    plt.xlabel('Stage')
+    plt.ylabel('Number of Deals')
+    plt.show()
+
+def plot_activity_distribution():
+    activity_counts = {}
+    for lead in leads:
+        for interaction in lead['interactions']:
+            activity_type = interaction['type']
+            if activity_type in activity_counts:
+                activity_counts[activity_type] += 1
+            else:
+                activity_counts[activity_type] = 1
+
+    labels = list(activity_counts.keys())
+    sizes = list(activity_counts.values())
+
+    plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
+    plt.title('Activity Distribution')
+    plt.show()
+
 def contacts_menu():
     while True:
         print("\n--- Contacts Menu ---")
@@ -639,6 +692,31 @@ def dashboard_menu(username):
         else:
             print("Invalid choice. Please try again.")
 
+def reporting_menu():
+    while True:
+        print("\n--- Reporting and Analytics Menu ---")
+        print("1. Generate Sales Report")
+        print("2. Generate Activity Report")
+        print("3. Plot Sales Metrics")
+        print("4. Plot Activity Distribution")
+        print("5. Back to Main Menu")
+        
+        choice = input("Choose an option (1-5): ")
+
+        if choice == '1':
+            generate_sales_report()
+        elif choice == '2':
+            generate_activity_report()
+        elif choice == '3':
+            plot_sales_metrics()
+        elif choice == '4':
+            plot_activity_distribution()
+        elif choice == '5':
+            print("Returning to Main Menu")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
 def menu():
     while True:
         print("\n--- Main Menu ---")
@@ -649,9 +727,10 @@ def menu():
         print("5. Email Campaigns")
         print("6. Leads")
         print("7. Dashboards")
-        print("8. Exit")
+        print("8. Reporting and Analytics")
+        print("9. Exit")
 
-        choice = input("Choose an option (1-7): ")
+        choice = input("Choose an option (1-9): ")
 
         if choice == '1':
             contacts_menu()
@@ -669,6 +748,8 @@ def menu():
             username = input("Enter your username: ")
             dashboard_menu(username)
         elif choice == '8':
+            reporting_menu()
+        elif choice == '9':
             print("Exiting program")
             break
         else:

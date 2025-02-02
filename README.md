@@ -11,5 +11,6 @@ This project is a simple Customer Relationship Management (CRM) tool built in Py
 campaigns;
 6. **Lead Generation and Tracking**: Tracking potential leads and their progress; 
 7. **Customizable Dashboards**: Offering customizable dashboards for different user roles; 
+8. **Reporting and Analytics**: Providing sales reports and customer analytics
 
 No external libraries are required to run this project.
