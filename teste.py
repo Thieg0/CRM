@@ -12,6 +12,9 @@ def add_contact(name, phone, email):
         'email': email
     }
     contacts.append(contact)
+    print(f'Contact added: {name}')
+
+    add_lead(name, email, phone, source = 'contact_added', status = "Leads")
  
 def update_contact(name, new_phone = None, new_email = None):
     for contact in contacts:
@@ -21,13 +24,16 @@ def update_contact(name, new_phone = None, new_email = None):
             if new_email:
                 contact['email'] = new_email
             return True
+    print(f'Contact not found: {name}')
     return False
 
 def remove_contact(name):
     for contact in contacts:
         if contact['name'] == name:
             contacts.remove(contact)
+            print(f'Contact removed: {name}')
             return True
+    print(f'Contact not found: {name}')
     return False
 
 def list_contacts():
@@ -102,11 +108,18 @@ def add_deal():
     if stage not in sales_pipeline:
         print("Invalid stage. Deal not added.")
         return
-    deal = {"name": name, "value": value, "stage": stage}
+
+    list_contacts()
+    contact_name = input("Enter the name of the contact to associate with this deal (or press Enter to skip): ")
+    contact = nect((c for c in contacts if c['name'] == contact_name), None)
+    
+    deal = {"name": name, "value": value, "stage": stage, 'contact': contact}
+    deals.append(deal)
     sales_pipeline[stage].append(deal)
     print(f"Deal added: {name} in stage {stage}")
 
 def move_deal():
+    list_deals()
     name = input("Enter the name of the deal to move: ")
     new_stage = input("Enter the new stage of the deal (Leads, Proposal sent, Negotiation, Closed): ")
     if new_stage not in sales_pipeline:
@@ -124,6 +137,7 @@ def move_deal():
     print(f"Deal not found: {name}")
 
 def remove_deal():
+    list_deals()
     name = input("Enter the name of the deal to remove: ")
     for stage in sales_pipeline:
         for deal in sales_pipeline[stage]:
@@ -140,7 +154,9 @@ def list_deals():
             print("No deals found")
         else:
             for deal in deals:
-                print(f"Name: {deal['name']}, Value: {deal['value']}")
+                print(f"Name: {deal['name']}, Email: {deal['email']}, Phone: {deal['phone']}, Value: {deal['value']}")
+                if deal.get('contact'):
+                    print(f"    Associated Contact: {deal['contact']['name']}")
 
 activities = []
 
@@ -276,6 +292,69 @@ def list_email_campaigns():
     else:
         for index, campaign in enumerate(email_campaigns):
             print(f'Index: {index}, Subject: {campaign["subject"]}, Status: {campaign["status"]}, Recipients: {len(campaign["recipients"])} \nEmails sent: {campaign["emails_sent"]}, Emails opened: {campaign["emails_opened"]}, Emails clicked: {campaign["emails_clicked"]}')
+
+leads = []
+
+def add_lead(name, email, phone, source, status = "new"):
+    lead = {
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'source': source,
+        'status': status,
+        'interactions': []
+    }
+    leads.append(lead)
+
+    if status in sales_pipeline:
+        sales_pipeline[status].append(lead)
+    print(f'Lead added: {name}')
+
+def update_lead_status(name, new_status):
+    for lead in leads:
+        if lead['name'] == name:
+            
+            if lead['status'] in sales_pipeline:
+                sales_pipeline[lead['status']] = [1 for 1 in sales_pipeline[lead['status']] if 1['name'] != name]
+
+            lead['status'] = new_status
+
+            if new_status in sales_pipeline:
+                sales_pipeline[new_status].append(lead)
+            print(f'Lead status updated: {name} -> {new_status}')
+            return True
+    print(f'Lead not found: {name}')
+    return False
+
+def add_interaction(name, interaction_type, description = ""):
+    for lead in leads:
+        if lead['name'] == name:
+            interaction = {
+                'type': interaction_type,
+                'description': description,
+                'date_time': datetime.now().strftime("%Y-%m-%d %H:%M")
+            }
+            lead['interactions'].append(interaction)
+            print(f'Interaction added: {interaction_type} with {name}')
+            return True
+    print(f'Lead not found: {name}')
+    return False
+
+def list_leads(filter_status = None):
+    if not leads:
+        print('No leads found')
+    else:
+        for lead in leads:
+            if filter_status and lead['status'] != filter_status:
+                continue
+            print(f'\nName: {lead['name']}')
+            print(f'Email: {lead['email']}')
+            print(f'Phone: {lead['phone']}')
+            print(f'Source: {lead['source']}')
+            print(f'Status: {lead['status']}')
+            print('Interactions:')
+            for interaction in lead['interactions']:
+                print(f' - {interaction['date_time']}: {interaction['type']} - {interaction['description']}')
 
 def contacts_menu():
     while True:
@@ -443,6 +522,42 @@ def email_campaigns_menu():
         else:
             print("Invalid choice. Please try again.")
 
+def leads_menu():
+    while True:
+        print("\n--- Leads Menu ---")
+        print("1. Add Lead")
+        print("2. Update Lead Status")
+        print("3. Add Interaction")
+        print("4. List Leads")
+        print("5. Back to Main Menu")
+        
+        choice = input("Choose an option (1-5): ")
+
+        if choice == '1':
+            name = input("Enter name: ")
+            email = input("Enter email: ")
+            phone = input("Enter phone: ")
+            source = input("Enter source: ")
+            status = input("Enter status (optional): ")
+            add_lead(name, email, phone, source, status if status else "new")
+        elif choice == '2':
+            name = input("Enter the name of the lead to update: ")
+            new_status = input("Enter new status: ")
+            update_lead_status(name, new_status)
+        elif choice == '3':
+            name = input("Enter the name of the lead: ")
+            interaction_type = input("Enter the type of interaction (call, meeting, email, etc.): ")
+            description = input("Enter description (optional): ")
+            add_interaction(name, interaction_type, description)
+        elif choice == '4':
+            filter_status = input("Enter status to filter (optional): ")
+            list_leads(filter_status if filter_status else None)
+        elif choice == '5':
+            print("Returning to Main Menu")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
 def menu():
     while True:
         print("\n--- Main Menu ---")
@@ -451,9 +566,10 @@ def menu():
         print("3. Deals")
         print("4. Activities")
         print("5. Email Campaigns")
-        print("6. Exit")
+        print("6. Leads")
+        print("7. Exit")
 
-        choice = input("Choose an option (1-6): ")
+        choice = input("Choose an option (1-7): ")
 
         if choice == '1':
             contacts_menu()
@@ -466,6 +582,8 @@ def menu():
         elif choice == '5':
             email_campaigns_menu()
         elif choice == '6':
+            leads_menu()
+        elif choice == '7':
             print("Exiting program")
             break
         else:
