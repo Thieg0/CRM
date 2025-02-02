@@ -464,6 +464,55 @@ def plot_activity_distribution():
     plt.title('Activity Distribution')
     plt.show()
 
+documents = []
+
+def upload_document(name, file_path, associate_with = None, doc_type = None):
+    try:
+        with open(file_path, 'rb') as file:
+            content = file.read()
+    except FileNotFoundError:
+        print(f"File not found: {file_path}")
+        return
+
+    document = {
+        'name': name,
+        'content': content,
+        'associated_with': associated_with,  # Pode ser um contato, lead ou deal
+        'type': doc_type  # Tipo de documento (proposta, contrato, etc.)
+    }
+    documents.append(document)
+    print(f"Document uploaded: {name}")
+
+def download_document(name, output_path):
+    for document in documents:
+        if document['name'] == name:
+            with open(output_path, 'wb') as file:
+                file.write(document['content'])
+            print(f"Document downloaded: {name}")
+            return
+    print(f"Document not found: {name}")
+
+def delete_document(name):
+    for document in documents:
+        if document['name'] == name:
+            documents.remove(document)
+            print(f"Document deleted: {name}")
+            return
+    print(f"Document not found: {name}")
+
+def list_documents():
+    if not documents:
+        print("No documents found.")
+    else:
+        for document in documents:
+            if filter_type and document['type'] != filter_type:
+                continue
+            if filter_associated_with and document['associated_with'] != filter_associated_with:
+                continue
+            print(f"\nName: {document['name']}")
+            print(f"Type: {document['type']}")
+            print(f"Associated With: {document['associated_with']}")
+
 def contacts_menu():
     while True:
         print("\n--- Contacts Menu ---")
@@ -717,6 +766,41 @@ def reporting_menu():
         else:
             print("Invalid choice. Please try again.")
 
+def documents_menu():
+    while True:
+        print("\n--- Documents Menu ---")
+        print("1. Upload Document")
+        print("2. Download Document")
+        print("3. Delete Document")
+        print("4. List Documents")
+        print("5. Back to Main Menu")
+        
+        choice = input("Choose an option (1-5): ")
+
+        if choice == '1':
+            name = input("Enter the name of the document: ")
+            file_path = input("Enter the file path to upload: ")
+            associated_with = input("Enter the name of the contact, lead, or deal to associate with (or press Enter to skip): ")
+            doc_type = input("Enter the type of document (proposal, contract, etc.): ")
+            upload_document(name, file_path, associated_with if associated_with else None, doc_type)
+        elif choice == '2':
+            name = input("Enter the name of the document to download: ")
+            output_path = input("Enter the output file path: ")
+            download_document(name, output_path)
+        elif choice == '3':
+            name = input("Enter the name of the document to delete: ")
+            delete_document(name)
+        elif choice == '4':
+            filter_type = input("Enter the type to filter by (or press Enter to skip): ")
+            filter_associated_with = input("Enter the name of the contact, lead, or deal to filter by (or press Enter to skip): ")
+            list_documents(filter_type if filter_type else None, filter_associated_with if filter_associated_with else None)
+        elif choice == '5':
+            print("Returning to Main Menu")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+
 def menu():
     while True:
         print("\n--- Main Menu ---")
@@ -728,9 +812,10 @@ def menu():
         print("6. Leads")
         print("7. Dashboards")
         print("8. Reporting and Analytics")
-        print("9. Exit")
+        print("9. Documents")
+        print("10. Exit")
 
-        choice = input("Choose an option (1-9): ")
+        choice = input("Choose an option (1-10): ")
 
         if choice == '1':
             contacts_menu()
@@ -750,6 +835,8 @@ def menu():
         elif choice == '8':
             reporting_menu()
         elif choice == '9':
+            documents_menu()
+        elif choice == '10':
             print("Exiting program")
             break
         else:
