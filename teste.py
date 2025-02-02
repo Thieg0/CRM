@@ -356,6 +356,61 @@ def list_leads(filter_status = None):
             for interaction in lead['interactions']:
                 print(f' - {interaction['date_time']}: {interaction['type']} - {interaction['description']}')
 
+users = {
+    'seller1': {'role': 'seller', 'name': 'Joao vendedor'},
+    'seller2': {'role': 'seller', 'name': 'Maria vendedora'},
+    'manager1': {'role': 'manager', 'name': 'Jose gerente'},
+    'admin1': {'role': 'admin', 'name': 'Ana administradora'}
+}
+
+def seller_dashboard(username):
+    user = users.get(username)
+    if not user or user['role'] != 'seller':
+        print('Access denied. You must be a seller to access this dashboard.')
+        return
+    
+    print(f'\n--- Seller Dashboard ---\nHello, {user['name']}')
+    print('Your contacts:')
+    list_contacts()
+    print('Your appointments:')
+    list_appointments()
+    print('Your deals:')
+    list_deals()
+    print('Your leads:')
+    list_leads()
+
+def manager_dashboard(username):
+    user = users.get(username)
+    if not user or user['role'] != 'manager':
+        print('Access denied. You must be a manager to access this dashboard.')
+        return
+    
+    print(f'\n--- Manager Dashboard ---\nHello, {user['name']}')
+    print('Sales pipeline Overview:')
+    list_deals()
+    print('\nPerfomance Metrics:')
+    print(f'Total of leads: {len(leads)}')
+    print(f'Total of deals: {len(deals)}')
+    print(f'Total of Revenue: ${sum(deal['value'] for deal in deals)}')
+
+def admin_dashboard(username):
+    user = users.get(username)
+    if not user or user['role'] != 'admin':
+        print('Access denied. You must be an admin to access this dashboard.')
+        return
+    
+    print(f'\n--- Admin Dashboard ---\nHello, {user['name']}')
+    print('All contacts:')
+    list_contacts()
+    print('All appointments:')
+    list_appointments()
+    print('All deals:')
+    list_deals()
+    print('All leads:')
+    list_leads()
+    print('All Email campaigns:')
+    list_email_campaigns()	
+
 def contacts_menu():
     while True:
         print("\n--- Contacts Menu ---")
@@ -558,6 +613,32 @@ def leads_menu():
         else:
             print("Invalid choice. Please try again.")
 
+def dashboard_menu(username):
+    user = users.get(username)
+    if not user:
+        print("User not found.")
+        return
+
+    while True:
+        print(f"\n--- Dashboard Menu ({user['name']}) ---")
+        print("1. View Dashboard")
+        print("2. Back to Main Menu")
+        
+        choice = input("Choose an option (1-2): ")
+
+        if choice == '1':
+            if user['role'] == 'seller':
+                seller_dashboard(username)
+            elif user['role'] == 'manager':
+                manager_dashboard(username)
+            elif user['role'] == 'admin':
+                admin_dashboard(username)
+        elif choice == '2':
+            print("Returning to Main Menu")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
 def menu():
     while True:
         print("\n--- Main Menu ---")
@@ -567,7 +648,8 @@ def menu():
         print("4. Activities")
         print("5. Email Campaigns")
         print("6. Leads")
-        print("7. Exit")
+        print("7. Dashboards")
+        print("8. Exit")
 
         choice = input("Choose an option (1-7): ")
 
@@ -584,6 +666,9 @@ def menu():
         elif choice == '6':
             leads_menu()
         elif choice == '7':
+            username = input("Enter your username: ")
+            dashboard_menu(username)
+        elif choice == '8':
             print("Exiting program")
             break
         else:
